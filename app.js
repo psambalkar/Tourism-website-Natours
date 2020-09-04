@@ -1,14 +1,16 @@
-const express=require('express');
-const morgan=require('morgan');
-const app=express();
-const tourRouter=require('./routes/tourRoutes');
-const userRouter=require('./routes/userRoutes');
+const express = require('express')
+const morgan = require('morgan');
+
+const app = express();
+
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
 
 //read file sync
-app.use(express.json())//this is the middleware which is used to add data to req obj.
+app.use(express.json())//this is the middleware which is used to add data to req obj req.body.
 //midlewares
-console.log(process.env.NODE_ENV);
-if(process.env.NODE_ENV==='development'){
+
+if(process.env.NODE_ENV === 'development'){
     app.use(morgan('dev'));
 }
 app.use(express.static(`${__dirname}/public`));
