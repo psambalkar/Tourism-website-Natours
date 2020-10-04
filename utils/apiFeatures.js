@@ -16,7 +16,7 @@ class APIFeatures{
     }
     sort(){
         if(this.queryString.sort){
-            const sortBy=this.quet.sort.split(',').join(' ');
+            const sortBy=this.queryString.sort.split(',').join(' ');
             // console.log(sortBy);
             this.query=this.query.sort(sortBy);    //to sort the this.query in ascending order if there is a sort paramater
             //sortby='price difficulty'

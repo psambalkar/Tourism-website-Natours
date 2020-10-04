@@ -54,17 +54,27 @@ exports.login=catchAsync(async(req,res,next)=>{
         return next(new AppError('Incorrect email or password ',401));
     }
     //3) If everything is ok send token to client
-    const token= signToken(user._id);
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(user,200,res);
+    // const token= signToken(user._id);
+    // res.status(200).json({
+    //     status: 'success',
+    //     token
+    // })
 });
+exports.logout=(req,res)=>{
+    res.cookie('jwt','loggedout',{
+        expires:new Date(Date.now() + 10*1000),
+        httpOnly:true
+    });
+    res.status(200).json({status:'success'})
+};
 exports.protect=catchAsync(async(req,res,next)=>{
     //1) getting the token and check if it exist
      let token;
      if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
          token=req.headers.authorization.split(' ')[1];
+     }else if(req.cookies.jwt){
+         token=req.cookies.jwt;
      }
     //  console.log(token);
      if(!token){
@@ -150,6 +160,7 @@ exports.resetPassword=catchAsync( async(req,res,next)=>{
     //3)update changedPaswwordAt Property for the user
     
     //4)Log the user in,send JWT
+
     const token= signToken(user._id);
     res.status(200).json({
         status: 'success',
@@ -179,3 +190,28 @@ exports.updatePassword=catchAsync(async(req,res,next)=>{
 
 
 })
+exports.isLoggedIn=catchAsync(async(req,res,next)=>{
+    //1) getting the token and check if it exist
+      if(req.cookies.jwt){
+         
+     
+    //  console.log(token);
+     
+    //2)verification token to check if no one modifies the payload that is the id
+    const decoded =await promisify(jwt.verify)(req.cookies.jwt,process.env.JWT_SECRET)          ///will return a promise
+    // console.log(decoded);
+    //3)check if user still exists
+    const CurrentUser=await User.findById(decoded.id);
+    if(!CurrentUser){
+        return next();
+    }
+    //4)Check if user change password after the JWT was issued
+    if(CurrentUser.changedPasswordAfter(decoded.iat)){
+        return next()
+    };
+    //There is a loggedin user
+    res.locals.user = CurrentUser   //we put that user on res.locals to give access to pug tempalte
+    return next();
+}
+next();
+});
